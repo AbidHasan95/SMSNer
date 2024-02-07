@@ -174,8 +174,8 @@ fun showUI(model: NERModel?) {
                                 for(x in annotatedlabels1) {
                                     withStyle(SpanStyle(color = colorMap1.getOrElse(x, { Color.Blue }))) {
                                         append("\n⬤ ")
-                                        append(x)
                                     }
+                                    append(x)
                                 }
                                 toAnnotatedString()
                         })

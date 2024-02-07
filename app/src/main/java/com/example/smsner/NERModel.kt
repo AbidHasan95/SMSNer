@@ -115,12 +115,6 @@ class NERModel(context: Context):AutoCloseable {
 //        https://central.sonatype.com/artifact/org.tensorflow/tensorflow-lite
 //        https://farmaker47.medium.com/build-tensorflow-lite-select-tf-ops-aar-and-tensorflow-lite-aar-files-with-colab-a2a6603602c8
         val numMsgs = msgList.size
-//        val inputs = {"a", "b"};
-//        val inputs = Array<Any>(size=numMsgs) {}
-//        val inputs = Array<Any>(size=numMsgs) {}
-//        val inputs = Array(numMsgs) { Array(3) {Array(MAX_SEQ_LEN) { FloatArray(NUM_CLASSES) } }}
-
-//        val output2 = Array(size=numMsgs) { Array(MAX_SEQ_LEN) { FloatArray(NUM_CLASSES) } }
         for ((msgIndex,msgTemp) in msgList.withIndex()) {
             val outputMap = mutableMapOf<Int,Array<Array<FloatArray>>>()
             val origIndexMap = mutableMapOf<Int,Any>()
@@ -132,11 +126,8 @@ class NERModel(context: Context):AutoCloseable {
             val msgTokens = msgList.get(msgIndex).map { it[0] }
             var feature: Feature? = featureConverter.convert(msgTokens)
             val origIndex = feature!!.tokenToOrigIndex
-
+            var tokens = feature!!.tokens
             origIndexMap.put(msgIndex,origIndex)
-//            outputMap.put(msgIndex, output2)
-//        val outputs2 = Array<Any>(MAX_SEQ_LEN){}
-
             for (i in 0 until MAX_SEQ_LEN) {
                 inputIds[0][i] = feature!!.inputIds[i]
                 tokenTypeIds[0][i] = feature!!.tokenTypeIds[i]
@@ -148,13 +139,9 @@ class NERModel(context: Context):AutoCloseable {
             }
             val inputs = arrayOf(attentionMask, inputIds, tokenTypeIds)
             outputMap.put(0, output2)
-//            var inputs2 = arrayOf(attentionMask, inputIds, tokenTypeIds)
-//            inputs[msgIndex] = arrayOf(attentionMask, inputIds, tokenTypeIds)
-            Log.v("DEBUG", feature?.inputIds?.size.toString())
             tflite?.runForMultipleInputsOutputs(inputs, outputMap as Map<Int, Any>)
             Log.v("DEBUG","run successful")
-
-            getNERLabels(outputMap,origIndexMap,msgList,msgIndex,msgTokens)
+            getNERLabels(outputMap,origIndex,msgList,msgIndex,msgTokens,tokens)
         }
 
 
@@ -168,8 +155,6 @@ class NERModel(context: Context):AutoCloseable {
 //
 //        1 output(s):
 //        [  1 512   9] <class 'numpy.float32'>
-//        var input1 = arrayOf(inputIds,tokenTypeIds,attentionMak)
-//        var output1 = arrayOf(Collections.nCopies(MAX_SEQ_LEN,Collections.nCopies(NUM_CLASSES,0.0)))
         var inputTensorCount =  tflite?.inputTensorCount
         var outputcount = tflite?.outputTensorCount
         var inp_shape = tflite?.getInputTensor(0)?.shape()
@@ -179,23 +164,16 @@ class NERModel(context: Context):AutoCloseable {
         var inp_dtype = tflite?.getInputTensor(0)?.dataType()
         var out1 = tflite?.getOutputTensor(0)?.shape()
         var out1_dtype = tflite?.getOutputTensor(0)?.dataType()
-//            val output3 = mutableMapOf(0 to output2)
-//        tflite?.resizeInput(0, intArrayOf(14,3,1,512))
-//        tflite?.resizeInput(1, intArrayOf(14,3,1,512))
-//        tflite?.resizeInput(2, intArrayOf(14,3,1,512))
-
-
     }
 
     fun getNERLabels(
         tfoutput: MutableMap<Int, Array<Array<FloatArray>>>,
-        origIndex: MutableMap<Int, Any>,
+        origIndex: MutableList<Int>,
         msgList: MutableList<MutableList<MutableList<String>>>,
         msgIndex: Int,
-        msgTokens: List<String>
+        msgTokens: List<String>,
+        tokens: MutableList<String>
     ) {
-//        val tokens = msgTemp.map { it[0] }
-//        var output = Array<Any>(tokens.size) {}
         var label_list = arrayOf(
             "O",
             "CREDIT",
@@ -208,20 +186,19 @@ class NERModel(context: Context):AutoCloseable {
             "REFUND"
         )
         val wordLabels = mutableMapOf<Int, String>()
-        for (i in 0 until msgTokens.size) {
+        for (i in 1 until tokens.size) {
+            if (tokens[i]=="[SEP]") {
+                break
+            }
             var maxidx = tfoutput[0]!![0][i]!!.indexOfFirst { it == tfoutput[0]!![0][i].max() }
             var label = label_list[maxidx]
-            var percent = tfoutput[0]!![0][i].max() / tfoutput[0]!![0][i].sum() * 100
-            var token = msgTokens[i]
-//                var str = "${token} - ${label}"
-//                output[i] = str
-            val wordIdx = origIndex[i]
-            if ((wordLabels[i] == "O" && label!="O") || wordLabels[i] == null) {
-                wordLabels[i] = label
-                msgList[msgIndex][i][1] = label
+//            var percent = tfoutput[0]!![0][i].max() / tfoutput[0]!![0][i].sum() * 100
+            val wordIdx = origIndex[i-1]
+            if ((wordLabels[wordIdx] == "O" && label!="O") || wordLabels[wordIdx] == null) {
+                wordLabels[wordIdx] = label
+                msgList[msgIndex][wordIdx][1] = label
             }
         }
-
     }
 
     override fun close() {
