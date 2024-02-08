@@ -3,6 +3,7 @@ package com.example.smsner
 import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
+import com.example.smsner.utils.SMSMessage
 import org.tensorflow.lite.Interpreter
 import java.io.BufferedReader
 import java.io.FileInputStream
@@ -108,7 +109,7 @@ class NERModel(context: Context):AutoCloseable {
 //        return getNERLabels(output2, feature!!.tokens, origIndex, msgList)
 //    }
 
-    fun predict2(msgList: MutableList<MutableList<MutableList<String>>>) {
+    fun predict2(msgList: MutableList<SMSMessage>) {
 //        https://stackoverflow.com/questions/65021800/tensorflow-lite-select-tf-ops-and-tensorflow-lite-aar-built-from-source-tflite-m
 //        https://www.tensorflow.org/lite/android/lite_build
 //        https://repo1.maven.org/maven2/org/tensorflow/tensorflow-lite/
@@ -123,7 +124,7 @@ class NERModel(context: Context):AutoCloseable {
             val attentionMask = Array(1) { LongArray(MAX_SEQ_LEN)}
             val output2 = Array(1) { Array(MAX_SEQ_LEN) { FloatArray(NUM_CLASSES) } }
 
-            val msgTokens = msgList.get(msgIndex).map { it[0] }
+            val msgTokens = msgList.get(msgIndex).msgWords.map { it[0] }
             var feature: Feature? = featureConverter.convert(msgTokens)
             val origIndex = feature!!.tokenToOrigIndex
             var tokens = feature!!.tokens
@@ -169,7 +170,7 @@ class NERModel(context: Context):AutoCloseable {
     fun getNERLabels(
         tfoutput: MutableMap<Int, Array<Array<FloatArray>>>,
         origIndex: MutableList<Int>,
-        msgList: MutableList<MutableList<MutableList<String>>>,
+        msgList: MutableList<SMSMessage>,
         msgIndex: Int,
         msgTokens: List<String>,
         tokens: MutableList<String>
@@ -196,7 +197,7 @@ class NERModel(context: Context):AutoCloseable {
             val wordIdx = origIndex[i-1]
             if ((wordLabels[wordIdx] == "O" && label!="O") || wordLabels[wordIdx] == null) {
                 wordLabels[wordIdx] = label
-                msgList[msgIndex][wordIdx][1] = label
+                msgList[msgIndex].msgWords[wordIdx][1] = label
             }
         }
     }

@@ -20,6 +20,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DisplayMode
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -42,7 +43,9 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.smsner.ui.theme.SMSNERTheme
+import com.example.smsner.utils.SMSMessage
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -110,7 +113,7 @@ fun showUI(model: NERModel?) {
 //    https://foso.github.io/Jetpack-Compose-Playground/foundation/lazycolumn/
     var msgList = remember {
 //        mutableStateListOf<MutableList<String>>()
-        mutableStateListOf<MutableList<MutableList<String>>>()
+        mutableStateListOf<SMSMessage>()
     }
     val msgList2 = remember {
         mutableListOf<String>()
@@ -153,10 +156,13 @@ fun showUI(model: NERModel?) {
                     modifier = Modifier.padding(top = 5.dp, start = 5.dp, end = 5.dp)
                 ) {
 //                    Text(text=item[0].toString(),modifier=Modifier.padding(5.dp))
+
                     Text(
-                        modifier = Modifier.padding(10.dp).fillMaxWidth(),
+                        modifier = Modifier
+                            .padding(10.dp)
+                            .fillMaxWidth(),
                             text=buildAnnotatedString {
-                                for((token,label) in item) {
+                                for((token,label) in item.msgWords) {
                                     if (label!="O") {
                                         withStyle(SpanStyle(color = colorMap1.getOrElse(label, { Color.Blue }))) {
                                             annotatedlabels1.add(label)
@@ -171,6 +177,27 @@ fun showUI(model: NERModel?) {
                                     }
                                     append(" ")
                                 }
+//                                for(x in annotatedlabels1) {
+//                                    withStyle(SpanStyle(color = colorMap1.getOrElse(x, { Color.Blue }))) {
+//                                        append("\n⬤ ")
+//                                    }
+//                                    append(x)
+//                                }
+                                toAnnotatedString()
+                            }
+                    )
+                    if (annotatedlabels1.size>0) {
+                        Divider(
+                            modifier = Modifier.padding(horizontal = 5.dp),
+                            thickness = 0.5.dp,
+                            color = Color.Black
+                        )
+                        Text(
+                            modifier = Modifier.padding(top = 8.dp, start = 8.dp, bottom = 8.dp, end = 8.dp),
+                            fontSize = 12.sp,
+                            text=buildAnnotatedString{
+                                append(item.msgSender)
+                                append("\n"+item.msgDate)
                                 for(x in annotatedlabels1) {
                                     withStyle(SpanStyle(color = colorMap1.getOrElse(x, { Color.Blue }))) {
                                         append("\n⬤ ")
@@ -178,7 +205,9 @@ fun showUI(model: NERModel?) {
                                     append(x)
                                 }
                                 toAnnotatedString()
-                        })
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -187,7 +216,7 @@ fun showUI(model: NERModel?) {
 
 
 fun readSMS(
-    msgList: MutableList<MutableList<MutableList<String>>>,
+    msgList: MutableList<SMSMessage>,
     context: Context,
     selectedDate1: String,
     startTime: Long,
@@ -219,10 +248,13 @@ fun readSMS(
             val message = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY))
             val origTokens = message!!.trim().split("\\s+".toRegex())
             val temp = mutableListOf<MutableList<String>>()
+            var msgDate = cursor.getString(cursor.getColumnIndexOrThrow((Telephony.Sms.DATE)))
+            var msgSender = cursor.getString(cursor.getColumnIndexOrThrow((Telephony.Sms.ADDRESS)))
             for (token in origTokens) {
                 temp.add(mutableListOf(token,"O"))
             }
-            msgList.add(temp)
+            val smsObj = SMSMessage(msgWords = temp,msgDate = msgDate, msgSender = msgSender)
+            msgList.add(smsObj)
         }
     }
 //    cursor!!.close()
@@ -237,7 +269,7 @@ fun messageUI() {
 fun mydatepicker(
     state: DatePickerState, openDialog: MutableState<Boolean>,
     selectedDate1: MutableState<Long>,
-    msgList: MutableList<MutableList<MutableList<String>>>
+    msgList: MutableList<SMSMessage>
 ) {
 //    https://medium.com/mobile-app-development-publication/date-and-time-picker-with-compose-9cadc4f50e6d
 //    https://medium.com/@rahulchaurasia3592/material3-datepicker-and-datepickerdialog-in-compose-in-android-54ec28be42c3
@@ -269,7 +301,7 @@ fun mydatepicker(
                         val startTime = simpleDateFormat2.parse(mydate+"T00:00:00")!!.time
 //                        val endTime = mydate+"T23:59:59"
                         val endTime = simpleDateFormat2.parse(mydate+"T23:59:59")!!.time
-//                        calStatetemp
+
                         readSMS(msgList,context,mydate,startTime,endTime)
                     }) {
                         Text(text = "Ok")
@@ -286,7 +318,7 @@ fun mydatepicker(
 @Composable
 fun showTopContent(
     selectedDate1: MutableState<Long>,
-    msgList: MutableList<MutableList<MutableList<String>>>,
+    msgList: MutableList<SMSMessage>,
     model: NERModel
 ) {
     val c = Calendar.getInstance()
