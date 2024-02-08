@@ -101,10 +101,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-fun getAnnotatedPrediction(model: NERModel,msgList: MutableList<String>) {
-
-}
-
 @Composable
 fun showUI(model: NERModel?) {
 //    https://stackoverflow.com/questions/72832802/how-to-show-multiple-color-text-in-same-text-view-with-jetpack-compose
@@ -144,7 +140,6 @@ fun showUI(model: NERModel?) {
         LazyColumn(
             modifier= Modifier
                 .fillMaxSize()
-//                .border(2.dp, Color.Blue)
         ) {
 //            items(msgList) {message ->
 //                Text(text = msgList[index].toString())
@@ -155,7 +150,6 @@ fun showUI(model: NERModel?) {
                 Card(
                     modifier = Modifier.padding(top = 5.dp, start = 5.dp, end = 5.dp)
                 ) {
-//                    Text(text=item[0].toString(),modifier=Modifier.padding(5.dp))
 
                     Text(
                         modifier = Modifier
@@ -170,19 +164,10 @@ fun showUI(model: NERModel?) {
                                         }
                                     }
                                     else {
-//                                        withStyle(SpanStyle(color = colorMap1.getOrElse(label, { Color.Blue }))) {
-//                                            append(token)
-//                                        }
                                         append(token)
                                     }
                                     append(" ")
                                 }
-//                                for(x in annotatedlabels1) {
-//                                    withStyle(SpanStyle(color = colorMap1.getOrElse(x, { Color.Blue }))) {
-//                                        append("\n⬤ ")
-//                                    }
-//                                    append(x)
-//                                }
                                 toAnnotatedString()
                             }
                     )
@@ -373,141 +358,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier, model: NERModel) {
             modifier = modifier
         )
     }
-
 }
-
-//class NERmodel(context: Context):AutoCloseable {
-//    private var tflite: Interpreter? = null
-//    private val MODEL_PATH = "model.tflite"
-//    private val DIC_PATH = "vocab.txt"
-//    private val MAX_SEQ_LEN = 512
-//    private val NUM_CLASSES = 9
-//    private val DO_LOWER_CASE = true
-//    private val dict1 = mutableMapOf<String,Int>();
-//    private val featureConverter = FeaureConverterNer(dict1, DO_LOWER_CASE,MAX_SEQ_LEN)
-//
-//
-//    init {
-////        var metadtaextractor = MetadataExtractor
-//        loadDictionaryFile(context.assets)
-//        loadModelFile(context.assets)
-//    }
-//
-//    @Throws(IOException::class)
-//    fun loadDictionaryFile(assetManager: AssetManager) {
-//        assetManager.open(DIC_PATH).use { ins ->
-//            BufferedReader(InputStreamReader(ins)).use { reader ->
-//                var index = 0
-//                while (reader.ready()) {
-//                    val key:String = reader.readLine()
-//                    dict1[key] = index++
-//
-//                }
-//            }
-//        }
-//    }
-//
-//    @Throws(IOException::class)
-//    private fun loadModelFile(assetManager: AssetManager) {
-//        val assetFileDescriptor = assetManager.openFd(MODEL_PATH)
-//        val fileInputStream = FileInputStream(assetFileDescriptor.getFileDescriptor())
-//        val fileChannel = fileInputStream.getChannel()
-//        val startoffset = assetFileDescriptor.getStartOffset()
-//        val declaredLength = assetFileDescriptor.getDeclaredLength()
-////        val opt = Interpreter.Options()
-//        val buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, startoffset, declaredLength)
-////        var metadataExtractor = MetadataExtractor(buffer)
-////        loadDictionaryFile(metadataExtractor!!.getAssociatedFile(DIC_PATH))
-//        tflite = Interpreter(buffer)
-//
-//    }
-//
-//    fun predict(text: String): Array<Any> {
-//        var feature: Feature? = featureConverter.convert(text)
-//        val inputIds = Array(1) { LongArray(MAX_SEQ_LEN)}
-//        val tokenTypeIds = Array(1) { LongArray(MAX_SEQ_LEN)}
-//        val attentionMask = Array(1) { LongArray(MAX_SEQ_LEN)}
-//        val inputs = Array<Any>(3){}
-//
-////        var x = inputs2.javaClass
-//
-////        val outputs2 = Array<Any>(MAX_SEQ_LEN){}
-//        val output2 = Array(1) {Array(MAX_SEQ_LEN) {FloatArray(NUM_CLASSES)}}
-//        for (i in 0 until MAX_SEQ_LEN) {
-//            inputIds[0][i] = feature!!.inputIds[i]
-//            tokenTypeIds[0][i] = feature!!.tokenTypeIds[i]
-//            attentionMask[0][i] = feature!!.attentionMask[i]
-////            outputs2[i] = floatArrayOf(0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f)
-//            for (j in 0 until NUM_CLASSES) {
-//                output2[0][i][j] = 0f
-//            }
-//        }
-//        for (i in 0..2) {
-//            inputs[0] = inputIds
-//            inputs[1] = tokenTypeIds
-//            inputs[2] = attentionMask
-//        }
-//        var inputs2 = arrayOf(attentionMask,inputIds,tokenTypeIds)
-//        Log.v("DEBUG", feature?.inputIds?.size.toString())
-////        3 input(s):
-////        [  1 512] <class 'numpy.int64'>
-////        [  1 512] <class 'numpy.int64'>
-////        [  1 512] <class 'numpy.int64'>
-////
-////        1 output(s):
-////        [  1 512   9] <class 'numpy.float32'>
-////        var input1 = arrayOf(inputIds,tokenTypeIds,attentionMak)
-////        var output1 = arrayOf(Collections.nCopies(MAX_SEQ_LEN,Collections.nCopies(NUM_CLASSES,0.0)))
-//        var inputTensorCount =  tflite?.inputTensorCount
-//        var outputcount = tflite?.outputTensorCount
-//        var inp1_shape = tflite?.getInputTensor(0)?.name()
-//        var inp2_shape = tflite?.getInputTensor(1)?.name()
-//        var inp3_shape = tflite?.getInputTensor(2)?.name()
-//        var inp_dtype = tflite?.getInputTensor(0)?.dataType()
-//        var out1 = tflite?.getOutputTensor(0)?.shape()
-//        var out1_dtype = tflite?.getOutputTensor(0)?.dataType()
-//        val output3 = mutableMapOf(0 to output2)
-//        tflite?.runForMultipleInputsOutputs(inputs2, output3 as Map<Int, Any>)
-//        Log.v("DEBUG","run successful")
-//
-//        return getNERLabels(output2,feature!!.tokens)
-//    }
-//
-//    fun getNERLabels(tfoutput:Array<Array<FloatArray>>,tokens:List<String>): Array<Any> {
-//        var output = Array<Any>(tokens.size){}
-//        var label_list = arrayOf(
-//            "O",
-//            "CREDIT",
-//            "EXPIRY",
-//            "COURIER_SERVICE",
-//            "OTP",
-//            "TRACKING_URL",
-//            "DEBIT",
-//            "TRACKING_ID",
-//            "REFUND"
-//        )
-//        for (i in 0 until tokens.size) {
-//            var maxidx = tfoutput[0][i].indexOfFirst {  it == tfoutput[0][i].max()}
-//            var label = label_list[maxidx]
-//            var percent = tfoutput[0][i].max()/tfoutput[0][i].sum()*100
-//            var token = tokens[i]
-//            var str = "${token} - ${label}"
-//            output[i] = str
-//        }
-//        return output
-//    }
-//
-//    override fun close() {
-//        if (tflite != null) {
-//            tflite!!.close()
-//            tflite = null
-//        }
-//        dict1.clear()
-//    }
-//
-//}
-
-
 
 @Preview(showBackground = true)
 @Composable

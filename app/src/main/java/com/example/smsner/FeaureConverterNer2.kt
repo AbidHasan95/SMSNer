@@ -6,9 +6,7 @@ class FeaureConverterNer2(inputDic: MutableMap<String, Int>, doLowerCase: Boolea
 
     var maxQueryLen:Int=0
 
-    private var tokenizer: FullTokenizer? = null
-//    private val maxQueryLen = 0
-//    private val maxSeqLen = 0
+    private var tokenizer: FullTokenizer
 
     init {
         this.tokenizer = FullTokenizer(inputDic, doLowerCase)
