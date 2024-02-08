@@ -58,7 +58,6 @@ dependencies {
 //    implementation("com.google.android.gms:play-services-tflite-gpu:16.1.0")
 //    implementation("org.tensorflow:tensorflow-lite-gpu:2.3.0")
     implementation("org.tensorflow:tensorflow-lite:2.3.0")
-//    implementation(files("libs/tensorflow-lite-2.3.0.aar"))
     implementation("org.tensorflow:tensorflow-lite-metadata:0.1.0")
     implementation("com.google.guava:guava:33.0.0-android")
     implementation(platform("androidx.compose:compose-bom:2023.08.00"))

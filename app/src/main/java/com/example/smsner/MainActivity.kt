@@ -327,7 +327,7 @@ fun showTopContent(
 
 //    DatePicker(state = calState, headline = null, title = null)
     Button(onClick = {
-        model.predict2(msgList)
+        model.predict(msgList)
     }) {
         Text(text = "Predict")
     }

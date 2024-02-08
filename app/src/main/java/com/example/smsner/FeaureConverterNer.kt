@@ -2,7 +2,7 @@ package com.example.smsner
 
 import java.util.Collections
 
-class FeaureConverterNer2(inputDic: MutableMap<String, Int>, doLowerCase: Boolean, var maxSeqLen: Int) {
+class FeaureConverterNer(inputDic: MutableMap<String, Int>, doLowerCase: Boolean, var maxSeqLen: Int) {
 
     var maxQueryLen:Int=0
 

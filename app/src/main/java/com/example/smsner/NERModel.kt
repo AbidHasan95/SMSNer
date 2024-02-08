@@ -19,7 +19,7 @@ class NERModel(context: Context):AutoCloseable {
     private val NUM_CLASSES = 9
     private val DO_LOWER_CASE = true
     private val dict1 = mutableMapOf<String,Int>();
-    private val featureConverter = FeaureConverterNer2(dict1, DO_LOWER_CASE,MAX_SEQ_LEN)
+    private val featureConverter = FeaureConverterNer(dict1, DO_LOWER_CASE,MAX_SEQ_LEN)
 
 
     init {
@@ -57,59 +57,7 @@ class NERModel(context: Context):AutoCloseable {
 
     }
 
-//    fun predict(text: String): MutableMap<Int, String> {
-//        var feature: Feature? = featureConverter.convert(text)
-//        val inputIds = Array(1) { LongArray(MAX_SEQ_LEN)}
-//        val tokenTypeIds = Array(1) { LongArray(MAX_SEQ_LEN)}
-//        val attentionMask = Array(1) { LongArray(MAX_SEQ_LEN)}
-//        val inputs = Array<Any>(3){}
-//        val origIndex = feature!!.tokenToOrigIndex
-//
-////        var x = inputs2.javaClass
-//
-////        val outputs2 = Array<Any>(MAX_SEQ_LEN){}
-//        val output2 = Array(1) {Array(MAX_SEQ_LEN) {FloatArray(NUM_CLASSES)}}
-//        for (i in 0 until MAX_SEQ_LEN) {
-//            inputIds[0][i] = feature!!.inputIds[i]
-//            tokenTypeIds[0][i] = feature!!.tokenTypeIds[i]
-//            attentionMask[0][i] = feature!!.attentionMask[i]
-////            outputs2[i] = floatArrayOf(0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f)
-//            for (j in 0 until NUM_CLASSES) {
-//                output2[0][i][j] = 0f
-//            }
-//        }
-//        for (i in 0..2) {
-//            inputs[0] = inputIds
-//            inputs[1] = tokenTypeIds
-//            inputs[2] = attentionMask
-//        }
-//        var inputs2 = arrayOf(attentionMask,inputIds,tokenTypeIds)
-//        Log.v("DEBUG", feature?.inputIds?.size.toString())
-////        3 input(s):
-////        [  1 512] <class 'numpy.int64'>
-////        [  1 512] <class 'numpy.int64'>
-////        [  1 512] <class 'numpy.int64'>
-////
-////        1 output(s):
-////        [  1 512   9] <class 'numpy.float32'>
-////        var input1 = arrayOf(inputIds,tokenTypeIds,attentionMak)
-////        var output1 = arrayOf(Collections.nCopies(MAX_SEQ_LEN,Collections.nCopies(NUM_CLASSES,0.0)))
-//        var inputTensorCount =  tflite?.inputTensorCount
-//        var outputcount = tflite?.outputTensorCount
-//        var inp1_shape = tflite?.getInputTensor(0)?.name()
-//        var inp2_shape = tflite?.getInputTensor(1)?.name()
-//        var inp3_shape = tflite?.getInputTensor(2)?.name()
-//        var inp_dtype = tflite?.getInputTensor(0)?.dataType()
-//        var out1 = tflite?.getOutputTensor(0)?.shape()
-//        var out1_dtype = tflite?.getOutputTensor(0)?.dataType()
-//        val output3 = mutableMapOf(0 to output2)
-//        tflite?.runForMultipleInputsOutputs(inputs2, output3 as Map<Int, Any>)
-//        Log.v("DEBUG","run successful")
-//
-//        return getNERLabels(output2, feature!!.tokens, origIndex, msgList)
-//    }
-
-    fun predict2(msgList: MutableList<SMSMessage>) {
+    fun predict(msgList: MutableList<SMSMessage>) {
 //        https://stackoverflow.com/questions/65021800/tensorflow-lite-select-tf-ops-and-tensorflow-lite-aar-built-from-source-tflite-m
 //        https://www.tensorflow.org/lite/android/lite_build
 //        https://repo1.maven.org/maven2/org/tensorflow/tensorflow-lite/
