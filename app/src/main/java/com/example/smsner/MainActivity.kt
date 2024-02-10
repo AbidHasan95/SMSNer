@@ -46,8 +46,10 @@ import androidx.compose.ui.unit.sp
 import com.example.smsner.ui.theme.SMSNERTheme
 import com.example.smsner.utils.SMSMessage
 import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
 
@@ -211,6 +213,8 @@ fun readSMS(
 //    https://github.com/stevdza-san/ReadSMSDemo/blob/master/app/src/main/java/com/stevdza/san/readsmsdemo/MainActivity.kt
     msgList.clear()
     val dateFilter = "date>=$startTime and date<=$endTime"
+    val simpleDateFormat = SimpleDateFormat("yyyy-mm-dd")
+    val formatter = DateTimeFormatter.ofPattern("dd MMM, YYYY hh:mm a")
     val cursor = context.contentResolver.query(
 //        Uri.parse("content://sms/inbox"),
         Telephony.Sms.CONTENT_URI,
@@ -233,6 +237,7 @@ fun readSMS(
             val origTokens = message!!.trim().split("\\s+".toRegex())
             val temp = mutableListOf<MutableList<String>>()
             var msgDate = cursor.getString(cursor.getColumnIndexOrThrow((Telephony.Sms.DATE)))
+            msgDate = Instant.ofEpochMilli(msgDate.toLong()).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter)
             var msgSender = cursor.getString(cursor.getColumnIndexOrThrow((Telephony.Sms.ADDRESS)))
             for (token in origTokens) {
                 temp.add(mutableListOf(token,"O"))
