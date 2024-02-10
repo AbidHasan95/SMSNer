@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.provider.Telephony
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,12 +29,15 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +47,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.example.smsner.ui.theme.SMSNERTheme
 import com.example.smsner.utils.SMSMessage
 import java.text.SimpleDateFormat
@@ -103,6 +108,44 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MessageDialog(
+    showMessageDialog: MutableState<Boolean>,
+    selectedMessageIndex: MutableIntState,
+    msgList: SnapshotStateList<SMSMessage>
+) {
+        Dialog(
+            onDismissRequest = { showMessageDialog.value=false },
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(50.dp)
+            ) {
+                if (selectedMessageIndex.value!=-1) {
+                    var msgText = "Hello"
+                    for ((word,label) in msgList[selectedMessageIndex.value].msgWords) {
+                        msgText+= "$word "
+                    }
+                    Text(text = msgText)
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp)
+                ) {
+                    Button(onClick = { showMessageDialog.value=false }) {
+                        Text("Confirm")
+                    }
+                    Button(onClick = { showMessageDialog.value=false }) {
+                        Text("Cancel")
+                    }
+                }
+            }
+
+        }
+}
 @Composable
 fun showUI(model: NERModel?) {
 //    https://stackoverflow.com/questions/72832802/how-to-show-multiple-color-text-in-same-text-view-with-jetpack-compose
@@ -110,11 +153,15 @@ fun showUI(model: NERModel?) {
 //    https://developer.android.com/jetpack/compose/lists
 //    https://foso.github.io/Jetpack-Compose-Playground/foundation/lazycolumn/
     var msgList = remember {
-//        mutableStateListOf<MutableList<String>>()
         mutableStateListOf<SMSMessage>()
+//        MutableLiveData<MutableList<SMSMessage>>()
     }
-    val msgList2 = remember {
-        mutableListOf<String>()
+//    var selectedMessageObj: SMSMessage? = null
+    val showMessageDialog = remember {
+        mutableStateOf(false)
+    }
+    val selectedMessageIndex = remember {
+        mutableIntStateOf(-1)
     }
     val colorMap1 = mapOf(
         "O" to Color(0xFF328FB1),
@@ -127,8 +174,6 @@ fun showUI(model: NERModel?) {
         "TRACKING_ID" to Color(0xFFD9C8F2),
         "REFUND" to Color(0xFFD6E286)
     )
-    msgList2.add("test 1")
-    msgList2.add("Test 2")
     var selectedDate1 = remember { mutableStateOf(1L) }
 
     Column(
@@ -139,6 +184,9 @@ fun showUI(model: NERModel?) {
         ) {
             showTopContent(selectedDate1, msgList,model!!)
         }
+        when { showMessageDialog.value -> {
+            MessageDialog(showMessageDialog,selectedMessageIndex,msgList)
+        }}
         LazyColumn(
             modifier= Modifier
                 .fillMaxSize()
@@ -147,10 +195,16 @@ fun showUI(model: NERModel?) {
 //                Text(text = msgList[index].toString())
 //            }
 //            items(msgList) { item ->
-            itemsIndexed(msgList) { index,item ->
+            itemsIndexed(items= msgList, key = { index,item -> item.msgEpochTime}) { index,item ->
                 val annotatedlabels1 = mutableSetOf<String>()
                 Card(
-                    modifier = Modifier.padding(top = 5.dp, start = 5.dp, end = 5.dp)
+                    modifier = Modifier
+                        .padding(top = 5.dp, start = 5.dp, end = 5.dp)
+                        .clickable {
+                            showMessageDialog.value = true
+                            selectedMessageIndex.value = index
+                        }
+
                 ) {
 
                     Text(
@@ -173,23 +227,34 @@ fun showUI(model: NERModel?) {
                                 toAnnotatedString()
                             }
                     )
+                    Divider(
+                        modifier = Modifier.padding(top = 5.dp, start = 8.dp, end = 8.dp),
+                        thickness = 0.5.dp,
+                        color = Color.Black
+                    )
+                    Text(
+                        modifier = Modifier.padding(top=5.dp,start = 8.dp, end = 8.dp),
+                        fontSize = 12.sp,
+                        text = item.msgSender
+                    )
+                    Text(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        fontSize = 12.sp,
+                        text = item.msgDate
+                    )
                     if (annotatedlabels1.size>0) {
-                        Divider(
-                            modifier = Modifier.padding(horizontal = 5.dp),
-                            thickness = 0.5.dp,
-                            color = Color.Black
-                        )
+
                         Text(
-                            modifier = Modifier.padding(top = 8.dp, start = 8.dp, bottom = 8.dp, end = 8.dp),
+                            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp, end = 8.dp),
                             fontSize = 12.sp,
                             text=buildAnnotatedString{
-                                append(item.msgSender)
-                                append("\n"+item.msgDate)
+//                                append(item.msgSender)
+//                                append("\n"+item.msgDate)
                                 for(x in annotatedlabels1) {
                                     withStyle(SpanStyle(color = colorMap1.getOrElse(x, { Color.Blue }))) {
-                                        append("\n⬤ ")
+                                        append("⬤ ")
                                     }
-                                    append(x)
+                                    append(x+"\n")
                                 }
                                 toAnnotatedString()
                             }
@@ -223,26 +288,19 @@ fun readSMS(
         null,
         null,
     )
-//    if (cursor!=null) {
-//        if (cursor!!.moveToFirst()) {
-//            val message = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY))
-//            msgList.add(message.toString())
-//            cursor.moveToNext()
-//        }
-//    }
 
     if (cursor != null) {
         while(cursor.moveToNext()) {
             val message = cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Sms.BODY))
             val origTokens = message!!.trim().split("\\s+".toRegex())
             val temp = mutableListOf<MutableList<String>>()
-            var msgDate = cursor.getString(cursor.getColumnIndexOrThrow((Telephony.Sms.DATE)))
-            msgDate = Instant.ofEpochMilli(msgDate.toLong()).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter)
+            var msgEpochTime = cursor.getString(cursor.getColumnIndexOrThrow((Telephony.Sms.DATE))).toLong()
+            var msgDate = Instant.ofEpochMilli(msgEpochTime.toLong()).atZone(ZoneId.systemDefault()).toLocalDateTime().format(formatter)
             var msgSender = cursor.getString(cursor.getColumnIndexOrThrow((Telephony.Sms.ADDRESS)))
             for (token in origTokens) {
                 temp.add(mutableListOf(token,"O"))
             }
-            val smsObj = SMSMessage(msgWords = temp,msgDate = msgDate, msgSender = msgSender)
+            val smsObj = SMSMessage(msgWords = temp,msgDate = msgDate, msgSender = msgSender, msgEpochTime=msgEpochTime)
             msgList.add(smsObj)
         }
     }
