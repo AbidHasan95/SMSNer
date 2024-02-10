@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.Telephony
 import androidx.activity.ComponentActivity
-//import androidx.compose.material3.
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -47,8 +46,9 @@ import androidx.compose.ui.unit.sp
 import com.example.smsner.ui.theme.SMSNERTheme
 import com.example.smsner.utils.SMSMessage
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Calendar
-import java.util.Date
 
 
 class MainActivity : ComponentActivity() {
@@ -203,7 +203,6 @@ fun showUI(model: NERModel?) {
 fun readSMS(
     msgList: MutableList<SMSMessage>,
     context: Context,
-    selectedDate1: String,
     startTime: Long,
     endTime: Long
 ) {
@@ -263,7 +262,6 @@ fun mydatepicker(
     val context = LocalContext.current
     val calStatetemp = rememberDatePickerState(c.timeInMillis, initialDisplayMode = DisplayMode.Picker)
     val simpleDateFormat = SimpleDateFormat("yyyy-mm-dd")
-    val simpleDateFormat2 = SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss")
     return(
         if (openDialog.value) {
             DatePickerDialog(
@@ -281,13 +279,11 @@ fun mydatepicker(
                     TextButton(onClick = {
                         openDialog.value = false
                         selectedDate1.value = calStatetemp.selectedDateMillis!!
-                        val mydate = simpleDateFormat.format(Date(selectedDate1.value) )
-//                        val startTime = mydate+"T00:00:00"
-                        val startTime = simpleDateFormat2.parse(mydate+"T00:00:00")!!.time
-//                        val endTime = mydate+"T23:59:59"
-                        val endTime = simpleDateFormat2.parse(mydate+"T23:59:59")!!.time
-
-                        readSMS(msgList,context,mydate,startTime,endTime)
+//                        val mydate = simpleDateFormat.format(Date(selectedDate1.value) )
+                        val offsetMillis = LocalDateTime.now().atZone(ZoneId.systemDefault()).offset.totalSeconds*1000
+                        val startTime = selectedDate1.value - offsetMillis
+                        val endTime = startTime + 86400000
+                        readSMS(msgList,context,startTime,endTime)
                     }) {
                         Text(text = "Ok")
                     }
