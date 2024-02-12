@@ -5,6 +5,8 @@ import android.content.res.AssetManager
 import android.util.Log
 import com.example.smsner.utils.SMSMessage
 import org.tensorflow.lite.Interpreter
+import org.tensorflow.lite.gpu.CompatibilityList
+import org.tensorflow.lite.gpu.GpuDelegate
 import java.io.BufferedReader
 import java.io.FileInputStream
 import java.io.IOException
@@ -49,11 +51,21 @@ class NERModel(context: Context):AutoCloseable {
         val fileChannel = fileInputStream.getChannel()
         val startoffset = assetFileDescriptor.getStartOffset()
         val declaredLength = assetFileDescriptor.getDeclaredLength()
-//        val opt = Interpreter.Options()
+        val compatList = CompatibilityList()
+        val opt = Interpreter.Options().apply{
+            if(compatList.isDelegateSupportedOnThisDevice){
+                // if the device has a supported GPU, add the GPU delegate
+                val delegateOptions = compatList.bestOptionsForThisDevice
+                this.addDelegate(GpuDelegate(delegateOptions))
+            } else {
+                // if the GPU is not supported, run on 4 threads
+                this.setNumThreads(4)
+            }
+        }
         val buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, startoffset, declaredLength)
 //        var metadataExtractor = MetadataExtractor(buffer)
 //        loadDictionaryFile(metadataExtractor!!.getAssociatedFile(DIC_PATH))
-        tflite = Interpreter(buffer)
+        tflite = Interpreter(buffer,opt)
 
     }
 
