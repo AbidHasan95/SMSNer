@@ -2,18 +2,26 @@ package com.example.smsner
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.icu.text.ListFormatter.Width
 import android.os.Bundle
 import android.provider.Telephony
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DatePicker
@@ -22,6 +30,8 @@ import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -38,11 +48,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,8 +65,11 @@ import com.example.smsner.ui.theme.SMSNERTheme
 import com.example.smsner.utils.SMSMessage
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 
@@ -157,6 +173,10 @@ fun showUI(model: NERModel?) {
 //        MutableLiveData<MutableList<SMSMessage>>()
     }
 //    var selectedMessageObj: SMSMessage? = null
+    val currTimeMilli =  LocalDate.now().atStartOfDay().toEpochSecond(ZoneOffset.UTC)*1000
+    var selectedDate1 = remember { mutableStateOf(currTimeMilli) }
+    val context = LocalContext.current
+    readSMS(msgList,context,selectedDate1.value)
     val showMessageDialog = remember {
         mutableStateOf(false)
     }
@@ -167,29 +187,26 @@ fun showUI(model: NERModel?) {
         "O" to Color(0xFF328FB1),
         "CREDIT" to Color(0xFF328FB1),
         "EXPIRY" to Color(0xFFF27B77),
-        "COURIER_SERVICE" to Color(0xFFBBD6FD),
+        "COURIER SERVICE" to Color(0xFFBBD6FD),
         "OTP" to Color(0xFF328FB1),
-        "TRACKING_URL" to Color(0xFFDFACF6),
+        "TRACKING URL" to Color(0xFFDFACF6),
         "DEBIT" to Color(0xFFF27877),
-        "TRACKING_ID" to Color(0xFFD9C8F2),
+        "TRACKING ID" to Color(0xFFD9C8F2),
         "REFUND" to Color(0xFFD6E286)
     )
-    var selectedDate1 = remember { mutableStateOf(1L) }
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            showTopContent(selectedDate1, msgList,model!!)
-        }
+
+        showTopContent(selectedDate1, msgList,model!!)
         when { showMessageDialog.value -> {
             MessageDialog(showMessageDialog,selectedMessageIndex,msgList)
         }}
         LazyColumn(
             modifier= Modifier
                 .fillMaxSize()
+                .padding(bottom = 8.dp)
         ) {
 //            items(msgList) {message ->
 //                Text(text = msgList[index].toString())
@@ -198,8 +215,9 @@ fun showUI(model: NERModel?) {
             itemsIndexed(items= msgList, key = { index,item -> item.msgEpochTime}) { index,item ->
                 val annotatedlabels1 = mutableSetOf<String>()
                 Card(
+                    shape = RoundedCornerShape(20.dp),
                     modifier = Modifier
-                        .padding(top = 5.dp, start = 5.dp, end = 5.dp)
+                        .padding(start = 5.dp, end = 5.dp, bottom = 5.dp)
                         .clickable {
                             showMessageDialog.value = true
                             selectedMessageIndex.value = index
@@ -214,7 +232,7 @@ fun showUI(model: NERModel?) {
                             text=buildAnnotatedString {
                                 for((token,label) in item.msgWords) {
                                     if (label!="O") {
-                                        withStyle(SpanStyle(color = colorMap1.getOrElse(label, { Color.Blue }))) {
+                                        withStyle(SpanStyle(color = colorMap1.getOrElse(label.uppercase(), { Color.Blue }))) {
                                             annotatedlabels1.add(label)
                                             append(token)
                                         }
@@ -232,34 +250,67 @@ fun showUI(model: NERModel?) {
                         thickness = 0.5.dp,
                         color = Color.Black
                     )
-                    Text(
-                        modifier = Modifier.padding(top=5.dp,start = 8.dp, end = 8.dp),
-                        fontSize = 12.sp,
-                        text = item.msgSender
-                    )
-                    Text(
-                        modifier = Modifier.padding(horizontal = 8.dp),
-                        fontSize = 12.sp,
-                        text = item.msgDate
-                    )
-                    if (annotatedlabels1.size>0) {
 
-                        Text(
-                            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp, end = 8.dp),
-                            fontSize = 12.sp,
-                            text=buildAnnotatedString{
+                    Row {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth(0.7f)
+//                                .border(1.dp, Color.Red)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(top= 8.dp, start = 8.dp)
+                            ) {
+                                Icon(painter = painterResource(id = R.drawable.baseline_person_24),null, modifier = Modifier
+                                    .size(16.dp)
+                                    .padding(top = 2.dp))
+                                Text(
+//                                    modifier = Modifier,
+                                    fontSize = 14.sp,
+                                    text = item.msgSender
+                                )
+                            }
+                            Row(
+                                modifier = Modifier.padding(top= 8.dp, start = 8.dp, bottom = 8.dp)
+                            ) {
+                                Icon(painter = painterResource(id = R.drawable.baseline_access_time_24),null, modifier = Modifier
+                                    .size(16.dp)
+                                    .padding(top = 2.dp))
+                                Text(
+//                                    modifier = Modifier,
+                                    fontSize = 14.sp,
+                                    text = item.msgDate
+                                )
+                            }
+                        }
+                        Column {
+
+                            if (item.smsCategory.length>0) {
+                                Text(text = "Category", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(top=8.dp))
+                                Text(text = item.smsCategory)
+                            }
+
+                            if (annotatedlabels1.size>0) {
+                                Text(text = "Entities", fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(top=8.dp))
+                                Text(
+                                    modifier = Modifier.padding(start = 8.dp, bottom = 8.dp, end = 8.dp),
+                                    fontSize = 12.sp,
+                                    text=buildAnnotatedString{
 //                                append(item.msgSender)
 //                                append("\n"+item.msgDate)
-                                for(x in annotatedlabels1) {
-                                    withStyle(SpanStyle(color = colorMap1.getOrElse(x, { Color.Blue }))) {
-                                        append("⬤ ")
+                                        for(x in annotatedlabels1) {
+                                            withStyle(SpanStyle(color = colorMap1.getOrElse(x.uppercase(), { Color.Blue }))) {
+                                                append("⬤ ")
+                                            }
+                                            append(x+"\n")
+                                        }
+                                        toAnnotatedString()
                                     }
-                                    append(x+"\n")
-                                }
-                                toAnnotatedString()
+                                )
                             }
-                        )
+                        }
                     }
+
+
                 }
             }
         }
@@ -270,13 +321,16 @@ fun showUI(model: NERModel?) {
 fun readSMS(
     msgList: MutableList<SMSMessage>,
     context: Context,
-    startTime: Long,
-    endTime: Long
+    selectedDate: Long
 ) {
 //    https://stackoverflow.com/questions/9713021/reading-sms-received-after-a-date
 //    https://www.tutorialspoint.com/how-can-i-read-sms-messages-from-the-device-programmatically-in-android
 //    https://github.com/stevdza-san/ReadSMSDemo/blob/master/app/src/main/java/com/stevdza/san/readsmsdemo/MainActivity.kt
     msgList.clear()
+    val offsetMillis = LocalDateTime.now().atZone(ZoneId.systemDefault()).offset.totalSeconds*1000
+    val startTime = selectedDate - offsetMillis
+    val endTime = startTime + 86400000
+
     val dateFilter = "date>=$startTime and date<=$endTime"
     val simpleDateFormat = SimpleDateFormat("yyyy-mm-dd")
     val formatter = DateTimeFormatter.ofPattern("dd MMM, YYYY hh:mm a")
@@ -321,6 +375,7 @@ fun mydatepicker(
 //    https://medium.com/mobile-app-development-publication/date-and-time-picker-with-compose-9cadc4f50e6d
 //    https://medium.com/@rahulchaurasia3592/material3-datepicker-and-datepickerdialog-in-compose-in-android-54ec28be42c3
 //    https://www.geeksforgeeks.org/datepicker-in-kotlin/
+//    https://developer.android.com/reference/kotlin/android/icu/text/SimpleDateFormat
     val c = Calendar.getInstance()
     val context = LocalContext.current
     val calStatetemp = rememberDatePickerState(c.timeInMillis, initialDisplayMode = DisplayMode.Picker)
@@ -346,7 +401,7 @@ fun mydatepicker(
                         val offsetMillis = LocalDateTime.now().atZone(ZoneId.systemDefault()).offset.totalSeconds*1000
                         val startTime = selectedDate1.value - offsetMillis
                         val endTime = startTime + 86400000
-                        readSMS(msgList,context,startTime,endTime)
+                        readSMS(msgList,context,selectedDate1.value)
                     }) {
                         Text(text = "Ok")
                     }
@@ -366,7 +421,11 @@ fun showTopContent(
     model: NERModel
 ) {
     val c = Calendar.getInstance()
-
+    val formatter1 = DateTimeFormatter.ofPattern("dd MMMM, YYYY")
+    val formatter2 = DateTimeFormatter.ofPattern("eeee")
+    val localtime = LocalDateTime.ofEpochSecond(selectedDate1.value/1000,0,OffsetDateTime.now().offset)
+    val selectedDateStr1 = localtime.format(formatter1)
+    val selectedDateStr2 = localtime.format(formatter2)
 //    var selectedDate1 = remember { mutableStateOf(1L) }
     val openDialog = remember { mutableStateOf(false)}
     if (selectedDate1.value !=1L) {
@@ -375,21 +434,45 @@ fun showTopContent(
     val calState = rememberDatePickerState(c.timeInMillis, initialDisplayMode = DisplayMode.Picker)
 //    Text(text = calState.selectedDateMillis.toString())
 //    Text(text = selectedDate1.value.toString())
-    Text(text = msgList.size.toString()+" -> "+selectedDate1.value)
-    Button(onClick = {
+//    Text(text = msgList.size.toString()+" -> "+selectedDate1.value)
+    Row(
+        modifier = Modifier.padding(8.dp),
+    ) {
+        FilledTonalButton(
+            modifier = Modifier
+                .fillMaxWidth(0.7f)
+                .height(IntrinsicSize.Max)
+                .padding(end = 8.dp),
+            onClick = {
 //        val newFragment = DatePickerFragment()
-        openDialog.value = true
-    }) {
-        Text(text="Pick Date")
+                openDialog.value = true
+            }) {
+//        Text(text="Pick Date")
+            Icon(painter = painterResource(id = R.drawable.outline_calendar_today_24),null, modifier = Modifier.padding(end=8.dp).size(32.dp))
+//                .size(20.dp)
+//                .padding(top = 2.dp))
+            Column {
+                Text(selectedDateStr1, fontSize = 18.sp)
+                Text(selectedDateStr2, fontSize = 14.sp)
+            }
+
+        }
+        Button(
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .fillMaxWidth()
+                .height(IntrinsicSize.Max),
+//            modifier = Modifier.fillMaxSize(),
+            onClick = {
+                model.predict(msgList)
+            }) {
+            Text(text = "Predict", fontSize = 18.sp)
+        }
     }
+
     mydatepicker(state = calState, openDialog = openDialog, selectedDate1, msgList)
 
-//    DatePicker(state = calState, headline = null, title = null)
-    Button(onClick = {
-        model.predict(msgList)
-    }) {
-        Text(text = "Predict")
-    }
+
 }
 
 @Composable

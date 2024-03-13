@@ -6,6 +6,7 @@ class SMSMessage(
     msgSender: String,
     msgEpochTime: Long
 ) {
+    var smsCategory: String = ""
     var msgSender: String
     var msgDate: String
     var msgWords: MutableList<MutableList<String>>
