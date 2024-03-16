@@ -183,18 +183,53 @@ fun showUI(model: NERModel?) {
     val selectedMessageIndex = remember {
         mutableIntStateOf(-1)
     }
+//    val colorMap1 = mapOf(
+//        "O" to Color(0xFF328FB1),
+//        "CREDIT" to Color(0xFF328FB1),
+//        "EXPIRY" to Color(0xFFF27B77),
+//        "COURIER SERVICE" to Color(0xFFBBD6FD),
+//        "OTP" to Color(0xFF328FB1),
+//        "TRACKING URL" to Color(0xFFDFACF6),
+//        "DEBIT" to Color(0xFFF27877),
+//        "TRACKING ID" to Color(0xFFD9C8F2),
+//        "REFUND" to Color(0xFFD6E286)
+//            [
+//            'O',
+//            'Courier Service',
+//            'Credit',
+//            'Date',
+//            'Debit',
+//            'Email',
+//            'Expiry',
+//            'Item',
+//            'Order ID',
+//            'Organization',
+//            'OTP',
+//            'Phone Number',
+//            'Refund',
+//            'Time',
+//            'Tracking ID',
+//            'URL',
+//        ]
+//    )
     val colorMap1 = mapOf(
         "O" to Color(0xFF328FB1),
-        "CREDIT" to Color(0xFF328FB1),
-        "EXPIRY" to Color(0xFFF27B77),
-        "COURIER SERVICE" to Color(0xFFBBD6FD),
+        "Credit" to Color(0xFF328FB1),
+        "Expiry" to Color(0xFFF27B77),
+        "Courier Service" to Color(0xFFBBD6FD),
         "OTP" to Color(0xFF328FB1),
-        "TRACKING URL" to Color(0xFFDFACF6),
-        "DEBIT" to Color(0xFFF27877),
-        "TRACKING ID" to Color(0xFFD9C8F2),
-        "REFUND" to Color(0xFFD6E286)
+        "URL" to Color(0xFFDFACF6),
+        "Debit" to Color(0xFFF27877),
+        "Tracking ID" to Color(0xFFD9C8F2),
+        "Date" to Color(0xFFD6E286),
+        "Time" to Color(0xFFD6E286),
+        "Phone Number" to Color(0xFFD6E286),
+        "Organization" to Color(0xFFD6E286),
+        "Item" to Color(0xFFD6E286),
+        "Order ID" to Color(0xFFD6E286),
+        "Refund" to Color(0xFFD6E286),
+        "Email" to Color(0xFFD6E286),
     )
-
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -232,7 +267,7 @@ fun showUI(model: NERModel?) {
                             text=buildAnnotatedString {
                                 for((token,label) in item.msgWords) {
                                     if (label!="O") {
-                                        withStyle(SpanStyle(color = colorMap1.getOrElse(label.uppercase(), { Color.Blue }))) {
+                                        withStyle(SpanStyle(color = colorMap1.getOrElse(label, { Color.Blue }))) {
                                             annotatedlabels1.add(label)
                                             append(token)
                                         }
@@ -298,7 +333,7 @@ fun showUI(model: NERModel?) {
 //                                append(item.msgSender)
 //                                append("\n"+item.msgDate)
                                         for(x in annotatedlabels1) {
-                                            withStyle(SpanStyle(color = colorMap1.getOrElse(x.uppercase(), { Color.Blue }))) {
+                                            withStyle(SpanStyle(color = colorMap1.getOrElse(x, { Color.Blue }))) {
                                                 append("⬤ ")
                                             }
                                             append(x+"\n")
@@ -376,6 +411,7 @@ fun mydatepicker(
 //    https://medium.com/@rahulchaurasia3592/material3-datepicker-and-datepickerdialog-in-compose-in-android-54ec28be42c3
 //    https://www.geeksforgeeks.org/datepicker-in-kotlin/
 //    https://developer.android.com/reference/kotlin/android/icu/text/SimpleDateFormat
+//    https://developer.android.com/reference/kotlin/androidx/compose/material3/package-summary
     val c = Calendar.getInstance()
     val context = LocalContext.current
     val calStatetemp = rememberDatePickerState(c.timeInMillis, initialDisplayMode = DisplayMode.Picker)

@@ -17,11 +17,11 @@ import java.nio.channels.FileChannel
 class NERModel(context: Context):AutoCloseable {
     private var tflite: Interpreter? = null
 //    private val MODEL_PATH = "model.tflite"
-    private val MODEL_PATH = "model4.tflite"
+    private val MODEL_PATH = "model6-1.tflite"
 //    private val MODEL_PATH = "google-bert_uncased_L-2_H-512_A-8-Adam-recommended-100E-4.tflite"
     private val DIC_PATH = "vocab.txt"
     private val MAX_SEQ_LEN = 512
-    private val NUM_CLASSES = 9
+    private val NUM_CLASSES = 16
     private val DO_LOWER_CASE = true
     private val dict1 = mutableMapOf<String,Int>();
     private val featureConverter = FeaureConverterNer(dict1, DO_LOWER_CASE,MAX_SEQ_LEN)
